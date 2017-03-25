@@ -5,115 +5,124 @@ import javafx.animation.AnimationTimer;
 import java.util.HashSet;
 import java.util.Random;
 
-
 /**
  * Created by Sahba on 3/23/2017.
  */
 class Main extends AnimationTimer {
     private final Tree[][] JUNGLE;
     private final int SIZE;
-    private double p = 0.8;
+    private double p = 1;
     private final double LIGHT_PROB = 0.001;
     private final Random random;
-    private final HashSet<Pair> onFire;
-    private final HashSet<Pair> onFireCopy;
+    private final HashSet<Tree> onFire;
+    private final HashSet<Tree> onFireCopy;
+
     private final int[][] neighbours;
     private int liveCounter;
-    private final Terminatable terminatable;
-    private long preiousTime;
+    private final Terminable terminable;
+    private long previousTime;
+    private int itr;
 
-    Main(Tree[][] jungle, int size, Terminatable terminatable) {
+    Main(Tree[][] jungle, int size, Terminable terminable) {
         JUNGLE = jungle;
         this.SIZE = size;
         random = new Random();
         onFire = new HashSet<>();
         onFireCopy = new HashSet<>();
         neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
-        this.terminatable = terminatable;
+        this.terminable = terminable;
     }
 
 
     private void simulate() {
 
-        setonFire();
+        setOnFire();
+        Tree tree;
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
-
-                if (random.nextDouble() < p && JUNGLE[i][j].getState() == State.EMPTY) {
-                    JUNGLE[i][j].setState(State.SPECIES1);
-                    liveCounter++;
-                }
+                tree = JUNGLE[i][j];
                 if (random.nextDouble() < LIGHT_PROB) {
                     // XXX it should be either species one or species 2 check
-                    if (JUNGLE[i][j].getState() == State.SPECIES1 || JUNGLE[i][j].getState() == State.SPECIES2) {
-                        JUNGLE[i][j].setState(State.FIRE);
-                        onFire.add(new Pair(i, j));
+                    if (tree.getState() == State.SPECIES1 || tree.getState() == State.SPECIES2) {
+                        tree.setState(State.FIRE);
+                        onFire.add(tree);
                         liveCounter--;
                     }
                 }
+                if (tree.getState() == State.EMPTY && random.nextDouble() < p) {
+                    tree.setState(State.SPECIES1);
+                    liveCounter++;
+                }
+
             }
         }
     }
 
-    private void setonFire() {
+    private void setOnFire() {
         if (!onFire.isEmpty()) {
             onFireCopy.clear();
             onFireCopy.addAll(onFire);
             onFire.clear();
-            for (Pair p : onFireCopy) {
-                if (p.row < 0 || p.row >= SIZE || p.column < 0 || p.column >= SIZE) {
-                    continue;
-                }
-                burnNeighbours(p.row, p.column);
-                JUNGLE[p.row][p.column].setState(State.EMPTY);
+            for (Tree tree : onFireCopy) {
+//                if (tree.getRow() < 0 || tree.getRow() >= SIZE || tree.getColumn() < 0 || tree.getColumn() >= SIZE) {
+//                    continue;
+//                }
+                burnNeighbours(tree);
+                JUNGLE[tree.getRow()][tree.getColumn()].setState(State.EMPTY);
             }
             System.out.println("Live Counter: " + liveCounter);
             if (liveCounter < 0) {
-                terminatable.terminate("Negative");
+                terminable.terminate("Negative");
             }
             if (liveCounter == 0) {
-                terminatable.terminate("ALL TREES BURNT!");
+                terminable.terminate("ALL TREES BURNT!");
             }
         }
     }
 
-    private void burnNeighbours(int row, int column) {
+    private void burnNeighbours(Tree tree) {
         if (liveCounter == 0) {
-            terminatable.terminate("All burnt!");
+            terminable.terminate("All burnt!");
         }
-        int nRow;
-        int nColumn;
-        for (Pair pair : getNeighbours(row, column)) {
-            nRow = pair.row;
-            nColumn = pair.column;
-            if (nRow < 0 || nRow >= SIZE || nColumn < 0 || nColumn >= SIZE) {
+        Tree[] neighbours = getNeighbours(tree.getRow(), tree.getColumn());
+        Tree neighbour;
+        for (int i = 0; i < 8 && neighbours[i] != null; i++) {
+
+            neighbour = neighbours[i];
+            if (neighbour.getState() == State.SPECIES1 || neighbour.getState() == State.SPECIES2) {
+                liveCounter--;
+                neighbour.setState(State.FIRE);
+                onFire.add(neighbour);
+            }
+        }
+    }
+
+    private Tree[] getNeighbours(int row, int column) {
+        Tree[] neighbourTrees = new Tree[8];
+        int nrow;
+        int ncolumn;
+        for (int i = 0, j = 0; i < neighbours.length; i++) {
+            nrow = row + neighbours[i][0];
+            ncolumn = column + neighbours[i][1];
+            if (nrow < 0 || nrow >= SIZE || ncolumn < 0 || ncolumn >= SIZE) {
                 continue;
             }
-            if (JUNGLE[nRow][nColumn].getState() == State.SPECIES1 || JUNGLE[nRow][nColumn].getState() == State.SPECIES2) {
-                liveCounter--;
-                JUNGLE[nRow][nColumn].setState(State.FIRE);
-                onFire.add(new Pair(nRow, nColumn));
-            }
-        }
-    }
-
-    private Pair[] getNeighbours(int row, int column) {
-        Pair[] neighbourTrees = new Pair[8];
-        for (int i = 0; i < neighbours.length; i++) {
-            neighbourTrees[i] = new Pair(row + neighbours[i][0], column + neighbours[i][1]);
+            neighbourTrees[j] = JUNGLE[nrow][ncolumn];
+            j++;
         }
         return neighbourTrees;
     }
 
     @Override
     public void handle(long now) {
-        if (preiousTime == 0) {
-            preiousTime = now;
+        if (previousTime == 0) {
+            previousTime = now;
         } else {
 
-            System.out.format("%.5f\n", (now - preiousTime) / 1_000_000_000.00);
-            preiousTime = now;
+            System.out.format("itr=%d; time=%.5f\n", itr, (now - previousTime) / 1_000_000_000.00);
+            previousTime = now;
         }
+        itr++;
         simulate();
     }
 

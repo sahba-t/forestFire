@@ -9,8 +9,8 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
-public class GUI extends Application implements Terminatable {
-    private final int SIZE = 200;
+public class GUI extends Application implements Terminable {
+    private final int SIZE = 50;
     private final Tree[][] jungle;
     private double elementWidth;
     private double elementHeight;
