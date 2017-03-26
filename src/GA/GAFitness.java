@@ -5,22 +5,30 @@ import java.util.Random;
 
 /**
  * Created by Sahba on 3/25/17.
+ * This class Runs a simulation and returns the fitness score
  */
 public class GAFitness {
     private final int SIZE;
     private final double P;
-    private final double lightP = 0.001;
+    private final static double lightP = 0.001;
     private final GATree[][] jungle;
-    private final int MAXITR = 5000;
+    private final static int MAX_ITR = 5000;
     private final Random random;
     private int liveCounter;
     private int iteration = 0;
     private final HashSet<GATree> onFire;
     private final HashSet<GATree> onFireCopy;
     private boolean terminate = false;
-    int[][] neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
+    private int[][] neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
+    private static final boolean debug = true;
 
-    private GAFitness(int size, double p) {
+    /**
+     * The only constructor of this class
+     *
+     * @param size the size of the board @todo (Will later be fixed to 250)
+     * @param p    the probability of growing species 1. @todo later will have to add species 2
+     */
+    GAFitness(int size, double p) {
         this.SIZE = size + 2;
         P = p;
         random = new Random();
@@ -34,11 +42,19 @@ public class GAFitness {
         onFireCopy = new HashSet<>();
     }
 
+    /**
+     * Any Class that wishes to use this GA Evaluation should call this method
+     * It will run the simulation and terminates when either all the tress are burnt
+     * or 5000 iterations are done!
+     *
+     * @return an int array element 0 is the number of iterations until termination
+     * and the second element is the number of live trees at termination (if all trees burnt will be 0)
+     */
     int[] simulate() {
 
         GATree tree;
         int[] result = new int[2];
-        while (iteration < MAXITR) {
+        while (iteration < MAX_ITR) {
             System.out.println("itr: " + iteration);
             setOnFire();
             if (terminate) {
@@ -67,6 +83,10 @@ public class GAFitness {
 
     }
 
+    /**
+     * sets the status of the tress which caught fire in the last iterations to empty
+     * also sets the neighbours of such trees on fire by calling the burnNeighbours method!
+     */
     private void setOnFire() {
         if (!onFire.isEmpty()) {
             onFireCopy.clear();
@@ -79,7 +99,10 @@ public class GAFitness {
                 }
                 jungle[tree.getRow()][tree.getColumn()].setState('e');
             }
-            System.out.println("Live Counter: " + liveCounter);
+
+            if (debug) {
+                System.out.println("Live Counter: " + liveCounter);
+            }
             if (liveCounter == 0) {
                 terminate("ALL TREES BURNT!");
                 return;
@@ -87,6 +110,11 @@ public class GAFitness {
         }
     }
 
+    /**
+     * ignites the neighbours of a tree that is on fire.
+     *
+     * @param tree the tree whose neighbours have to catch fire
+     */
     private void burnNeighbours(GATree tree) {
         if (liveCounter == 0) {
             terminate("All burnt!");
@@ -105,6 +133,14 @@ public class GAFitness {
         }
     }
 
+    /**
+     * given the row and column number of a tree returns its 8 neighbours
+     *
+     * @param row    the row of that tree
+     * @param column the column of the tree
+     * @return an array of neighbours (in case less than 8 neighbours a null element willl signal there are
+     * no more neighbours in the array)
+     */
     private GATree[] getNeighbours(int row, int column) {
         GATree[] neighbourTrees = new GATree[8];
         int nRow;
@@ -120,6 +156,11 @@ public class GAFitness {
         return neighbourTrees;
     }
 
+    /**
+     * prints a debug message and signals the simulation to end
+     *
+     * @param message the debug message to be printed to stdout
+     */
     private void terminate(String message) {
         System.out.format("terminated after %d iterations due to:%s\n", iteration, message);
         terminate = true;
@@ -127,7 +168,7 @@ public class GAFitness {
     }
 
     public static void main(String[] args) {
-        GAFitness ga = new GAFitness(250, 1);
+        GAFitness ga = new GAFitness(50, 0.75);
         int[] result = ga.simulate();
         System.out.println(result[0] + ", " + result[1]);
     }
