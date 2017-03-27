@@ -77,6 +77,7 @@ public class GAFitness {
             }
             iteration++;
         }
+        setOnFire();
         result[0] = iteration;
         result[1] = liveCounter;
         return result;
@@ -168,7 +169,7 @@ public class GAFitness {
     }
 
     public static void main(String[] args) {
-        GAFitness ga = new GAFitness(50, 0.75);
+        GAFitness ga = new GAFitness(250, 0.75);
         int[] result = ga.simulate();
         System.out.println(result[0] + ", " + result[1]);
     }
