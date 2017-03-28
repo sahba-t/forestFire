@@ -50,13 +50,19 @@ public class GAFitness {
      * @return an int array element 0 is the number of iterations until termination
      * and the second element is the number of live trees at termination (if all trees burnt will be 0)
      */
-    int[] simulate() {
+    double[] simulate() {
 
         GATree tree;
-        int[] result = new int[2];
+        //it will now overflow value << 5000 * 625 << max double
+        double longevity = 0;
+        double[] result = new double[2];
         while (iteration < MAX_ITR) {
             System.out.println("itr: " + iteration);
             setOnFire();
+            if (iteration > 0) {
+                longevity += liveCounter;
+
+            }
             if (terminate) {
                 break;
             }
@@ -77,9 +83,12 @@ public class GAFitness {
             }
             iteration++;
         }
-        setOnFire();
+        if (!terminate) {
+            setOnFire();
+            longevity += liveCounter;
+        }
         result[0] = iteration;
-        result[1] = liveCounter;
+        result[1] = longevity / (double) iteration;
         return result;
 
     }
@@ -101,13 +110,13 @@ public class GAFitness {
                 jungle[tree.getRow()][tree.getColumn()].setState('e');
             }
 
-            if (debug) {
-                System.out.println("Live Counter: " + liveCounter);
-            }
             if (liveCounter == 0) {
                 terminate("ALL TREES BURNT!");
                 return;
             }
+        }
+        if (debug) {
+            System.out.println("Live Counter: " + liveCounter);
         }
     }
 
@@ -169,8 +178,8 @@ public class GAFitness {
     }
 
     public static void main(String[] args) {
-        GAFitness ga = new GAFitness(250, 0.75);
-        int[] result = ga.simulate();
+        GAFitness ga = new GAFitness(250, 0.99);
+        double[] result = ga.simulate();
         System.out.println(result[0] + ", " + result[1]);
     }
 }
