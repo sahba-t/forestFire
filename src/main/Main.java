@@ -1,5 +1,7 @@
 package main;
 
+import gui.State;
+import gui.Tree;
 import javafx.animation.AnimationTimer;
 
 import java.util.Random;
