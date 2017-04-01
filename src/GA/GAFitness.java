@@ -66,7 +66,6 @@ public class GAFitness implements Runnable {
         }
         onFire.clear();
         onFireCopy.clear();
-        iteration = 0;
         setSpecies(s1, s2);
     }
 
@@ -82,8 +81,10 @@ public class GAFitness implements Runnable {
         if (specie1 == null || (twoSpecies && specie2 == null)) {
             System.out.println("AT LEAST ONE SPECIES SHOULD BE SET! ERROR!");
         }
+        terminate = false;
         GATree tree;
         liveCounter = 0;
+        iteration = 1;
         //it will now overflow value << 5000 * 625 << max double
         double longevity = 0;
         while (iteration < MAX_ITR) {
@@ -95,9 +96,8 @@ public class GAFitness implements Runnable {
             if (terminate) {
                 break;
             }
-            if (iteration > 0) {
+            if (iteration > 1) {
                 longevity += liveCounter;
-
             }
             for (int i = 1; i < SIZE - 1; i++) {
                 for (int j = 1; j < SIZE - 1; j++) {

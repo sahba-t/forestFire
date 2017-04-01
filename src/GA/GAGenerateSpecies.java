@@ -2,6 +2,7 @@ package GA;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,9 +18,10 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
     private final int POP_COUNT;
     private ArrayList<GASpecies> speciesPopulation;
     private Random random;
-    private final static int BOARD_SIZE = 150;
+    private final static int BOARD_SIZE = 100;
     private final static int THREAD_POOL_SIZE = 5;
     private final static int MAX_ITERATION = 10;
+    private final Comparator<GASpecies> FITNESS_CRITERION;
 
     /**
      * Constructor.
@@ -27,11 +29,11 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
      * @param speciesName
      * @param populationCount
      */
-    GAGenerateSpecies(String speciesName, int populationCount) {
+    GAGenerateSpecies(String speciesName, int populationCount, Comparator<GASpecies> fitnessComaparator) {
         this.speciesName = speciesName;
         POP_COUNT = populationCount;
         this.random = new Random();
-
+        this.FITNESS_CRITERION = fitnessComaparator;
         //generateSpecies(random);
 
     }
@@ -52,14 +54,16 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         while (iteration < MAX_ITERATION) {
             ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
             getFitness(speciesPopulation, executor, iteration, fitnessThreads);
-
-            selection(speciesPopulation);
-
-            mutate(speciesPopulation);
             iteration++;
-            System.out.println(iteration);
+            if (iteration < MAX_ITERATION) {
+                selection(speciesPopulation);
+
+                mutate(speciesPopulation);
+
+                System.out.println(iteration);
+            }
         }
-        Collections.sort(speciesPopulation, GASpecies.Comparators.LONGETIVITYANDBIOMASS);
+        Collections.sort(speciesPopulation, FITNESS_CRITERION);
         Collections.reverse(speciesPopulation);
 
         System.out.format("Species %s evolved growth rate: %.10f\n", speciesName, speciesPopulation.get(0).getP());
@@ -79,7 +83,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
             individual = population.get(i);
             individual.setIdentifier(String.format("p=%.6f; itr=%d", individual.getP(), iteration));
             threads[i].resetParameter(individual, null);
-            executor.submit(threads[i]);
+            executor.execute(threads[i]);
         }
         executor.shutdown();
         while (!executor.isTerminated()) {
@@ -105,17 +109,15 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
      */
     private void selection(ArrayList<GASpecies> population) {
         int halfway = POP_COUNT / 2;
-        Collections.sort(population, GASpecies.Comparators.BIOMASS);
-        Collections.reverse(population);
-        int keeperIndex = 0;
-        for (int index = halfway; index < POP_COUNT; index++) {
-
+        population.sort(FITNESS_CRITERION);
+        int keeperIndex;
+        for (int index = 0; index < halfway; index++) {
+            keeperIndex = POP_COUNT - index - 1;
             System.out.format("keeper longevity: %.10f  biomass: %.10f\n",
                     population.get(keeperIndex).getLongevity(), population.get(keeperIndex).getBiomass());
             System.out.format("leaver longevity: %.10f  biomass: %.10f\n",
                     population.get(index).getLongevity(), population.get(index).getBiomass());
             population.get(index).setP(population.get(keeperIndex).getP());
-            keeperIndex++;
         }
     }
 
@@ -151,7 +153,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
     }
 
     public static void main(String[] args) {
-        (new Thread(new GAGenerateSpecies("one", 4))).start();
+        (new Thread(new GAGenerateSpecies("one", 10, GASpecies.Comparators.BIOMASS))).start();
         //(new Thread(new GAGenerateSpecies("two", 4))).start();
 
     }
