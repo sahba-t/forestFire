@@ -1,6 +1,7 @@
 package gui;
 
 import javafx.animation.AnimationTimer;
+import javafx.scene.canvas.GraphicsContext;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -11,7 +12,7 @@ import java.util.Random;
 class Main extends AnimationTimer {
     private final Tree[][] JUNGLE;
     private final int SIZE;
-    private double p = 1;
+    private final double p1;
     private final double LIGHT_PROB = 0.001;
     private final Random random;
     private final HashSet<Tree> onFire;
@@ -22,17 +23,30 @@ class Main extends AnimationTimer {
     private final Terminable terminable;
     private long previousTime;
     private int itr;
+    private final GraphicsContext gcx;
 
-    Main(Tree[][] jungle, int size, Terminable terminable) {
-        JUNGLE = jungle;
+    Main(int size, double p1, Terminable terminable, GraphicsContext gcx) {
+        this.p1 = p1;
         this.SIZE = size;
+        this.gcx = gcx;
+        JUNGLE = new Tree[size][size];
+        buildJungle();
         random = new Random();
         onFire = new HashSet<>();
         onFireCopy = new HashSet<>();
         neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
         this.terminable = terminable;
+
     }
 
+    private void buildJungle() {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                JUNGLE[i][j] = new Tree(i, j, gcx);
+            }
+        }
+        System.out.println("jungle built");
+    }
 
     private void simulate() {
 
@@ -49,7 +63,7 @@ class Main extends AnimationTimer {
                         liveCounter--;
                     }
                 }
-                if (tree.getState() == State.EMPTY && random.nextDouble() < p) {
+                if (tree.getState() == State.EMPTY && random.nextDouble() < p1) {
                     tree.setState(State.SPECIES1);
                     liveCounter++;
                 }
@@ -124,16 +138,5 @@ class Main extends AnimationTimer {
         }
         itr++;
         simulate();
-    }
-
-
-    private class Pair {
-        private final int row;
-        private final int column;
-
-        private Pair(int row, int column) {
-            this.row = row;
-            this.column = column;
-        }
     }
 }
