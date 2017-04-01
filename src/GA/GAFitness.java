@@ -29,6 +29,10 @@ public class GAFitness implements Runnable {
     private int iteration;
     private String identifire;
 
+    /**
+     * @param size       The size of the simulation
+     * @param twoSpecies Whether or not we have two species
+     */
     GAFitness(int size, boolean twoSpecies) {
         this.SIZE = size + 2;
         this.twoSpecies = twoSpecies;
@@ -48,6 +52,12 @@ public class GAFitness implements Runnable {
         setSpecies(specie1, species2);
     }
 
+    /**
+     * uses the given individuals to set the probabilities p1 and p2
+     *
+     * @param specie1  the first individual in the simulation
+     * @param species2 the second individual if two species is true
+     */
     private void setSpecies(GASpecies specie1, GASpecies species2) {
         this.P1 = specie1.getP();
         this.specie1 = specie1;
@@ -57,6 +67,13 @@ public class GAFitness implements Runnable {
         }
     }
 
+    /**
+     * This methods makes this class reusable. Just by specifying one (two if two species simulation) new individual(s)
+     * the sumulation can be re-run without creating or destroying any new objects
+     *
+     * @param s1 the first individual in the simulation
+     * @param s2 (required if two species is set to true) the second individual in the simulation
+     */
     void resetParameter(GASpecies s1, GASpecies s2) {
 
         for (int i = 1; i < SIZE - 1; i++) {
@@ -73,11 +90,10 @@ public class GAFitness implements Runnable {
      * Any Class that wishes to use this GA Evaluation should call this method
      * It will run the simulation and terminates when either all the tress are burnt
      * or 5000 iterations are done!
-     *
-     * @return an int array element 0 is the number of iterations until termination
-     * and the second element is the number of live trees at termination (if all trees burnt will be 0)
+     * <p>
+     * At the end of the simulation sets the longevity and biomass of the given individuals
      */
-    void simulate() {
+    private void simulate() {
         if (specie1 == null || (twoSpecies && specie2 == null)) {
             System.out.println("AT LEAST ONE SPECIES SHOULD BE SET! ERROR!");
         }
@@ -91,8 +107,9 @@ public class GAFitness implements Runnable {
             if (debug) {
                 System.out.println("itr: " + iteration);
             }
+            //sets the previously ignited cells to empty and mark their neighbours as on fire
             setOnFire();
-
+            //if all trees have burnt stop!
             if (terminate) {
                 break;
             }
@@ -126,6 +143,7 @@ public class GAFitness implements Runnable {
             setOnFire();
             longevity += liveCounter;
         }
+        //set the biomass and longevity of individuals
         double biomass = longevity / (double) iteration;
         specie1.setBiomass(biomass);
         specie1.setLongevity(iteration);
@@ -233,10 +251,6 @@ public class GAFitness implements Runnable {
         GAFitness ga = new GAFitness(200, species1, species2, false);
         new Thread(ga).start();
     }
-
-
-//        double[] result = ga.simulate();
-//        System.out.println(result[0] + ", " + result[1]);
 
 
     @Override

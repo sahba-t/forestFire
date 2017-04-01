@@ -18,22 +18,24 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
     private final int POP_COUNT;
     private ArrayList<GASpecies> speciesPopulation;
     private Random random;
+    //the size of the simulation
     private final static int BOARD_SIZE = 100;
+    //how many worker threads should run simultaneously
     private final static int THREAD_POOL_SIZE = 5;
     private final static int MAX_ITERATION = 10;
+    //set the comparator for selection from the GA SPECIES class
     private final Comparator<GASpecies> FITNESS_CRITERION;
 
     /**
-     * Constructor.
-     *
-     * @param speciesName
-     * @param populationCount
+     * @param speciesName       the name for the species we are optimizing
+     * @param populationCount   the number of initial population
+     * @param fitnessComparator the comparator for comparing individuals
      */
-    GAGenerateSpecies(String speciesName, int populationCount, Comparator<GASpecies> fitnessComaparator) {
+    GAGenerateSpecies(String speciesName, int populationCount, Comparator<GASpecies> fitnessComparator) {
         this.speciesName = speciesName;
         POP_COUNT = populationCount;
         this.random = new Random();
-        this.FITNESS_CRITERION = fitnessComaparator;
+        this.FITNESS_CRITERION = fitnessComparator;
         //generateSpecies(random);
 
     }
@@ -45,16 +47,16 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
             fitnessThreads[i] = new GAFitness(BOARD_SIZE, false);
         }
         speciesPopulation = new ArrayList<>();
-        //creating a thread pool!
-
         initializePopulation(speciesPopulation);
         System.out.format("Starting evolving species %s\n", speciesName);
         int iteration = 0; //temporary until I find a good stopping condition
 
         while (iteration < MAX_ITERATION) {
+            //creating a thread pool!
             ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
             getFitness(speciesPopulation, executor, iteration, fitnessThreads);
             iteration++;
+            // I think we should not evolve our last generation
             if (iteration < MAX_ITERATION) {
                 selection(speciesPopulation);
 
@@ -81,6 +83,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         GASpecies individual;
         for (int i = 0; i < population.size(); i++) {
             individual = population.get(i);
+            //setting a string representation to identify the individual
             individual.setIdentifier(String.format("p=%.6f; itr=%d", individual.getP(), iteration));
             threads[i].resetParameter(individual, null);
             executor.execute(threads[i]);
@@ -89,14 +92,6 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         while (!executor.isTerminated()) {
 
         }
-//        for (GASpecies aPopulation : population) {
-//            System.out.println(aPopulation);
-//        }
-//            GAFitness gaFitness = new GAFitness(250, f.getP());
-//            double[] scores = gaFitness.simulate();
-//            f.setLongevity(scores[0]);
-//            f.setBiomass(scores[1]);
-//        }
     }
 
     /**
