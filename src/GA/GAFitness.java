@@ -7,30 +7,31 @@ import java.util.Random;
  * Created by Sahba on 3/25/17.
  * This class Runs a simulation and returns the fitness score
  */
-public class GAFitness {
+public class GAFitness implements Runnable {
     private final int SIZE;
-    private final double P;
+    private final boolean twoSpecies;
+    private double P1;
+    private double P2;
+    private GASpecies specie1;
+    private GASpecies specie2;
+
     private final static double lightP = 0.001;
     private final GATree[][] jungle;
     private final static int MAX_ITR = 5000;
     private final Random random;
     private int liveCounter;
-    private int iteration = 0;
     private final HashSet<GATree> onFire;
     private final HashSet<GATree> onFireCopy;
     private boolean terminate = false;
     private int[][] neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
-    private static final boolean debug = true;
+    private static final boolean debug = false;
+    // private final JungleDataKeeper dataKeeper;
+    private int iteration;
+    private String identifire;
 
-    /**
-     * The only constructor of this class
-     *
-     * @param size the size of the board @todo (Will later be fixed to 250)
-     * @param p    the probability of growing species 1. @todo later will have to add species 2
-     */
-    GAFitness(int size, double p) {
+    GAFitness(int size, boolean twoSpecies) {
         this.SIZE = size + 2;
-        P = p;
+        this.twoSpecies = twoSpecies;
         random = new Random();
         jungle = new GATree[SIZE][SIZE];
         for (int i = 1; i < SIZE - 1; i++) {
@@ -42,6 +43,33 @@ public class GAFitness {
         onFireCopy = new HashSet<>();
     }
 
+    GAFitness(int size, GASpecies specie1, GASpecies species2, boolean twoSpecies) {
+        this(size, twoSpecies);
+        setSpecies(specie1, species2);
+    }
+
+    private void setSpecies(GASpecies specie1, GASpecies species2) {
+        this.P1 = specie1.getP();
+        this.specie1 = specie1;
+        if (twoSpecies) {
+            this.P2 = species2.getP() + P1;
+            this.specie2 = species2;
+        }
+    }
+
+    void resetParameter(GASpecies s1, GASpecies s2) {
+
+        for (int i = 1; i < SIZE - 1; i++) {
+            for (int j = 1; j < SIZE - 1; j++) {
+                jungle[i][j].setState('e');
+            }
+        }
+        onFire.clear();
+        onFireCopy.clear();
+        iteration = 0;
+        setSpecies(s1, s2);
+    }
+
     /**
      * Any Class that wishes to use this GA Evaluation should call this method
      * It will run the simulation and terminates when either all the tress are burnt
@@ -50,21 +78,26 @@ public class GAFitness {
      * @return an int array element 0 is the number of iterations until termination
      * and the second element is the number of live trees at termination (if all trees burnt will be 0)
      */
-    double[] simulate() {
-
+    void simulate() {
+        if (specie1 == null || (twoSpecies && specie2 == null)) {
+            System.out.println("AT LEAST ONE SPECIES SHOULD BE SET! ERROR!");
+        }
         GATree tree;
+        liveCounter = 0;
         //it will now overflow value << 5000 * 625 << max double
         double longevity = 0;
-        double[] result = new double[2];
         while (iteration < MAX_ITR) {
-            System.out.println("itr: " + iteration);
+            if (debug) {
+                System.out.println("itr: " + iteration);
+            }
             setOnFire();
+
+            if (terminate) {
+                break;
+            }
             if (iteration > 0) {
                 longevity += liveCounter;
 
-            }
-            if (terminate) {
-                break;
             }
             for (int i = 1; i < SIZE - 1; i++) {
                 for (int j = 1; j < SIZE - 1; j++) {
@@ -75,9 +108,15 @@ public class GAFitness {
                             tree.setState('f');
                             onFire.add(tree);
                         }
-                    } else if (tree.getState() == 'e' && random.nextDouble() < P) {
-                        tree.setState('s');
-                        liveCounter++;
+                    } else if (tree.getState() == 'e') {
+                        if (random.nextDouble() < P1) {
+                            tree.setState('s');
+                            liveCounter++;
+                        } else if (twoSpecies && random.nextDouble() < P2) {
+                            tree.setState('w');
+                            liveCounter++;
+                        }
+
                     }
                 }
             }
@@ -87,16 +126,27 @@ public class GAFitness {
             setOnFire();
             longevity += liveCounter;
         }
-        result[0] = iteration;
-        result[1] = longevity / (double) iteration;
-        return result;
+        double biomass = longevity / (double) iteration;
+        specie1.setBiomass(biomass);
+        specie1.setLongevity(iteration);
 
+        System.out.println(specie1);
+
+        if (twoSpecies) {
+            specie2.setLongevity(iteration);
+            specie2.setBiomass(biomass);
+            if (debug) {
+                System.out.println(specie2);
+            }
+        }
     }
+
 
     /**
      * sets the status of the tress which caught fire in the last iterations to empty
      * also sets the neighbours of such trees on fire by calling the burnNeighbours method!
      */
+
     private void setOnFire() {
         if (!onFire.isEmpty()) {
             onFireCopy.clear();
@@ -178,8 +228,19 @@ public class GAFitness {
     }
 
     public static void main(String[] args) {
-        GAFitness ga = new GAFitness(250, 0.99);
-        double[] result = ga.simulate();
-        System.out.println(result[0] + ", " + result[1]);
+        GASpecies species1 = new GASpecies(0.8);
+        GASpecies species2 = new GASpecies(0.5);
+        GAFitness ga = new GAFitness(200, species1, species2, false);
+        new Thread(ga).start();
+    }
+
+
+//        double[] result = ga.simulate();
+//        System.out.println(result[0] + ", " + result[1]);
+
+
+    @Override
+    public void run() {
+        simulate();
     }
 }
