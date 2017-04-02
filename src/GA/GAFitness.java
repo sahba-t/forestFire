@@ -1,6 +1,6 @@
 package GA;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -20,8 +20,8 @@ public class GAFitness implements Runnable {
     private final static int MAX_ITR = 5000;
     private final Random random;
     private int liveCounter;
-    private final HashSet<GATree> onFire;
-    private final HashSet<GATree> onFireCopy;
+    private final ArrayList<GATree> onFire;
+    private final ArrayList<GATree> onFireCopy;
     private boolean terminate = false;
     private int[][] neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
     private static final boolean debug = false;
@@ -43,11 +43,11 @@ public class GAFitness implements Runnable {
                 jungle[i][j] = new GATree(i, j);
             }
         }
-        onFire = new HashSet<>();
-        onFireCopy = new HashSet<>();
+        onFire = new ArrayList<>();
+        onFireCopy = new ArrayList<>();
     }
 
-    GAFitness(int size, GASpecies specie1, GASpecies species2, boolean twoSpecies) {
+    private GAFitness(int size, GASpecies specie1, GASpecies species2, boolean twoSpecies) {
         this(size, twoSpecies);
         setSpecies(specie1, species2);
     }
@@ -153,9 +153,9 @@ public class GAFitness implements Runnable {
         if (twoSpecies) {
             specie2.setLongevity(iteration);
             specie2.setBiomass(biomass);
-            if (debug) {
-                System.out.println(specie2);
-            }
+
+            System.out.println(specie2);
+
         }
     }
 

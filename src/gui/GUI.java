@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GUI extends Application implements Terminable {
-    private static final int SIZE = 210;
+    private static final int SIZE = 250;
     private static final double P1 = 0.2;
     private static final double P2 = 0.44;
 
@@ -41,7 +41,7 @@ public class GUI extends Application implements Terminable {
 //        });
 
         primaryStage.show();
-        new Main(SIZE, P1, P2, this, gcx, 450).start();
+        new Main(SIZE, P1, P2, this, gcx, 625).start();
     }
 
 
