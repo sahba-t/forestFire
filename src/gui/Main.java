@@ -13,7 +13,9 @@ class Main extends AnimationTimer {
     private final Tree[][] JUNGLE;
     private final int SIZE;
     private final double p1;
-    private final double LIGHT_PROB = 0.001;
+    private double p2;
+    private boolean twoSpecies = false;
+    private static final double LIGHT_PROB = 0.001;
     private final Random random;
     private final HashSet<Tree> onFire;
     private final HashSet<Tree> onFireCopy;
@@ -25,6 +27,15 @@ class Main extends AnimationTimer {
     private int itr;
     private final GraphicsContext gcx;
 
+    /**
+     * Constructor for the animation (simulation class). If this class is used it is assumed that
+     * one specie simulation was intended
+     *
+     * @param size       the size of the board
+     * @param p1         the growth probability for species 1
+     * @param terminable the call back class to receive the result
+     * @param gcx        the graphic content of the GUI canvas
+     */
     Main(int size, double p1, Terminable terminable, GraphicsContext gcx) {
         this.p1 = p1;
         this.SIZE = size;
@@ -36,6 +47,20 @@ class Main extends AnimationTimer {
         onFireCopy = new HashSet<>();
         neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
         this.terminable = terminable;
+        this.twoSpecies = false;
+    }
+
+    /**
+     * @param size       the size of the board
+     * @param p1         the growth probability for species 1
+     * @param p2         the growth probability for species 2
+     * @param terminable the call back class to receive the result
+     * @param gcx        the graphic content of the GUI canvas
+     */
+    Main(int size, double p1, double p2, Terminable terminable, GraphicsContext gcx) {
+        this(size, p1, terminable, gcx);
+        this.p2 = p2 + p1;
+        this.twoSpecies = true;
 
     }
 
@@ -63,10 +88,16 @@ class Main extends AnimationTimer {
                         liveCounter--;
                     }
                 }
-                if (tree.getState() == State.EMPTY && random.nextDouble() < p1) {
-                    tree.setState(State.SPECIES1);
-                    liveCounter++;
-                }
+                if (tree.getState() == State.EMPTY)
+                    if (random.nextDouble() < p1) {
+                        tree.setState(State.SPECIES1);
+                        liveCounter++;
+                    } else {
+                        if (twoSpecies && random.nextDouble() < p2) {
+                            tree.setState(State.SPECIES2);
+                            liveCounter++;
+                        }
+                    }
 
             }
         }
@@ -78,9 +109,6 @@ class Main extends AnimationTimer {
             onFireCopy.addAll(onFire);
             onFire.clear();
             for (Tree tree : onFireCopy) {
-//                if (tree.getRow() < 0 || tree.getRow() >= SIZE || tree.getColumn() < 0 || tree.getColumn() >= SIZE) {
-//                    continue;
-//                }
                 burnNeighbours(tree);
                 JUNGLE[tree.getRow()][tree.getColumn()].setState(State.EMPTY);
             }

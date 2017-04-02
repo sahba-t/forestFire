@@ -13,7 +13,8 @@ import javafx.stage.Stage;
 
 public class GUI extends Application implements Terminable {
     private final int SIZE = 250;
-    private static final double P1 = 0.4;
+    private static final double P1 = 0.2;
+    private static final double P2 = 0.44;
     private double elementWidth;
     private double elementHeight;
     private Group[] rows;
@@ -35,18 +36,18 @@ public class GUI extends Application implements Terminable {
         ScrollPane pane = new ScrollPane(canvas);
         primaryStage.setScene(new Scene(pane));
         Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
-        primaryStage.setX(bounds.getMinX());
-        primaryStage.setY(bounds.getMinY());
-        primaryStage.setWidth(bounds.getWidth());
-        primaryStage.setHeight(bounds.getHeight());
-        pane.vvalueProperty().addListener((observable, oldValue, newValue) ->
-        {
-            System.out.println("should shou rows: " + pane.getHeight() / elementHeight);
-            System.out.println("starting from row: " + newValue.doubleValue() * SIZE / pane.getVmax());
-        });
+//        primaryStage.setX(bounds.getMinX());
+//        primaryStage.setY(bounds.getMinY());
+//        primaryStage.setWidth(bounds.getWidth());
+//        primaryStage.setHeight(bounds.getHeight());
+//        pane.vvalueProperty().addListener((observable, oldValue, newValue) ->
+//        {
+//            System.out.println("should shou rows: " + pane.getHeight() / elementHeight);
+//            System.out.println("starting from row: " + newValue.doubleValue() * SIZE / pane.getVmax());
+//        });
 
         primaryStage.show();
-        new Main(SIZE, P1, this, gcx).start();
+        new Main(SIZE, P1, P2, this, gcx).start();
     }
 
 
