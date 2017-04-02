@@ -3,7 +3,9 @@ package gui;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.GraphicsContext;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Random;
 
 /**
@@ -17,15 +19,16 @@ class Main extends AnimationTimer {
     private boolean twoSpecies = false;
     private static final double LIGHT_PROB = 0.001;
     private final Random random;
-    private final HashSet<Tree> onFire;
-    private final HashSet<Tree> onFireCopy;
-
+    private final ArrayList<Tree> onFire;
+    private final ArrayList<Tree> onFireCopy;
+    private final boolean useFireFighters;
     private final int[][] neighbours;
     private int liveCounter;
     private final Terminable terminable;
     private long previousTime;
     private int itr;
     private final GraphicsContext gcx;
+    private int fireFighterCount;
 
     /**
      * Constructor for the animation (simulation class). If this class is used it is assumed that
@@ -36,18 +39,25 @@ class Main extends AnimationTimer {
      * @param terminable the call back class to receive the result
      * @param gcx        the graphic content of the GUI canvas
      */
-    Main(int size, double p1, Terminable terminable, GraphicsContext gcx) {
+    Main(int size, double p1, Terminable terminable, GraphicsContext gcx, int fireFighterCount) {
         this.p1 = p1;
-        this.SIZE = size;
+        this.SIZE = size + 2;
         this.gcx = gcx;
-        JUNGLE = new Tree[size][size];
+        JUNGLE = new Tree[SIZE][SIZE];
         buildJungle();
         random = new Random();
-        onFire = new HashSet<>();
-        onFireCopy = new HashSet<>();
+        onFire = new ArrayList<>();
+        onFireCopy = new ArrayList<>();
         neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
         this.terminable = terminable;
         this.twoSpecies = false;
+        if (fireFighterCount > 0) {
+            useFireFighters = true;
+            this.fireFighterCount = fireFighterCount;
+        } else {
+            useFireFighters = false;
+            fireFighterCount = 0;
+        }
     }
 
     /**
@@ -57,16 +67,16 @@ class Main extends AnimationTimer {
      * @param terminable the call back class to receive the result
      * @param gcx        the graphic content of the GUI canvas
      */
-    Main(int size, double p1, double p2, Terminable terminable, GraphicsContext gcx) {
-        this(size, p1, terminable, gcx);
+    Main(int size, double p1, double p2, Terminable terminable, GraphicsContext gcx, int fireFighterCount) {
+        this(size, p1, terminable, gcx, fireFighterCount);
         this.p2 = p2 + p1;
         this.twoSpecies = true;
 
     }
 
     private void buildJungle() {
-        for (int i = 0; i < SIZE; i++) {
-            for (int j = 0; j < SIZE; j++) {
+        for (int i = 1; i < SIZE - 1; i++) {
+            for (int j = 1; j < SIZE - 1; j++) {
                 JUNGLE[i][j] = new Tree(i, j, gcx);
             }
         }
@@ -77,8 +87,8 @@ class Main extends AnimationTimer {
 
         setOnFire();
         Tree tree;
-        for (int i = 0; i < SIZE; i++) {
-            for (int j = 0; j < SIZE; j++) {
+        for (int i = 1; i < SIZE - 1; i++) {
+            for (int j = 1; j < SIZE - 1; j++) {
                 tree = JUNGLE[i][j];
                 if (random.nextDouble() < LIGHT_PROB) {
                     // XXX it should be either species one or species 2 check
@@ -88,7 +98,7 @@ class Main extends AnimationTimer {
                         liveCounter--;
                     }
                 }
-                if (tree.getState() == State.EMPTY)
+                if (tree.getState() == State.EMPTY || tree.getState() == State.EXTINGUISHED)
                     if (random.nextDouble() < p1) {
                         tree.setState(State.SPECIES1);
                         liveCounter++;
@@ -118,6 +128,29 @@ class Main extends AnimationTimer {
             }
             if (liveCounter == 0) {
                 terminable.terminate("ALL TREES BURNT!");
+            }
+            if (useFireFighters) {
+                if (fireFighterCount >= onFire.size()) {
+
+                    for (Tree anOnFire : onFire) {
+
+                        anOnFire.setState(State.EXTINGUISHED);
+                    }
+                    System.out.format("all %d fires extinguished!\n", onFire.size());
+                    onFire.clear();
+                } else {
+                    int i = 0;
+                    int fires = onFire.size();
+                    Tree tree;
+                    Collections.shuffle(onFire);
+                    for (Iterator<Tree> treeItr = onFire.iterator(); i < fireFighterCount; i++) {
+                        tree = treeItr.next();
+                        tree.setState(State.EXTINGUISHED);
+
+                        treeItr.remove();
+                    }
+                    System.out.format("%d fires extinguished out of %d!\n", i, fires);
+                }
             }
         }
     }
