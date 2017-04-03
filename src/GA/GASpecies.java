@@ -25,6 +25,7 @@ public class GASpecies {
         this.identifier = identifier;
     }
 
+    String getIdentifier() { return identifier;}
 
     void setP(double p) {
         P = p;

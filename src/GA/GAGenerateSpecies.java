@@ -1,10 +1,14 @@
 package GA;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The genetic algorithm class, one species runs on one Thread
@@ -13,7 +17,8 @@ import java.util.concurrent.Executors;
 public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
 
     private final static double MUT_PROB = 0.1;
-    private final String speciesName;
+    private final String species1Name;
+    private final String species2Name;
     private final int POP_COUNT;
     private Random random;
     //the size of the simulation
@@ -23,20 +28,39 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
     private final static int MAX_ITERATION = 10;
     //set the comparator for selection from the GA SPECIES class
     private final Comparator<GASpecies> FITNESS_CRITERION;
-    private static final boolean TWO_SPECIES = true;
+    private final boolean TWO_SPECIES;
 
     /**
+     * The Constructor for one species
      * @param speciesName       the name for the species we are optimizing
      * @param populationCount   the number of initial population
      * @param fitnessComparator the comparator for comparing individuals
      */
     GAGenerateSpecies(String speciesName, int populationCount, Comparator<GASpecies> fitnessComparator) {
-        this.speciesName = speciesName;
+        this.species1Name = speciesName;
+        TWO_SPECIES = false;
+        this.species2Name = null;
         POP_COUNT = populationCount;
         this.random = new Random();
         this.FITNESS_CRITERION = fitnessComparator;
         //generateSpecies(random);
 
+    }
+
+    /**
+     * The Constructor for two species
+     * @param species1Name the name for the first species we are optimizing
+     * @param species2Name the name for the second species we are optimizing
+     * @param populationCount the number of initial population
+     * @param fitnessComparator the comparator for comparing individuals
+     */
+    GAGenerateSpecies(String species1Name, String species2Name, int populationCount, Comparator<GASpecies> fitnessComparator) {
+        this.species1Name = species1Name;
+        this.species2Name = species2Name;
+        TWO_SPECIES = true;
+        POP_COUNT = populationCount;
+        this.random = new Random();
+        this.FITNESS_CRITERION = fitnessComparator;
     }
 
     @Override
@@ -53,7 +77,6 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
             speciesPopulation2 = new ArrayList<>();
             initializePopulation(speciesPopulation2);
         }
-        System.out.format("Starting evolving species %s\n", speciesName);
         int iteration = 0; //temporary until I find a good stopping condition
         GAWorker worker1 = new GAWorker();
         GAWorker worker2 = new GAWorker();
@@ -66,10 +89,22 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
             if (TWO_SPECIES) {
                 getFitness(speciesPopulation, speciesPopulation2, fitnessExecutor, iteration, fitnessThreads);
                 gaExecutor = Executors.newFixedThreadPool(2);
+                for (GASpecies individual : speciesPopulation){
+                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
+                }
+                for (GASpecies individual : speciesPopulation2){
+                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
+                }
 
             } else {
                 getFitness(speciesPopulation, fitnessExecutor, iteration, fitnessThreads);
+                for (GASpecies individual : speciesPopulation){
+                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
+                }
             }
+
+
+
             // I think we should not evolve our last generation
             if (iteration < MAX_ITERATION) {
                 if (!TWO_SPECIES) {
@@ -92,7 +127,10 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
 
         speciesPopulation.sort(FITNESS_CRITERION);
 
-        System.out.format("Species %s evolved growth rate: %.10f\n", speciesName, speciesPopulation.get(POP_COUNT - 1).getP());
+        System.out.format("Species %s evolved growth rate: %.10f\n", species1Name, speciesPopulation.get(POP_COUNT - 1).getP());
+        if (TWO_SPECIES) {
+            System.out.format("Species %s evolved growth rate: %.10f\n", species2Name, speciesPopulation2.get(POP_COUNT - 1).getP());
+        }
     }
 
     private void initializePopulation(ArrayList<GASpecies> population) {
@@ -116,6 +154,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         while (!executor.isTerminated()) {
 
         }
+
     }
 
     private void getFitness(ArrayList<GASpecies> population1, ArrayList<GASpecies> population2, ExecutorService executor, int iteration, GAFitness[] threads) {
@@ -134,26 +173,13 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         while (!executor.isTerminated()) {
 
         }
+
     }
 
-    private double onePointCross(double d1, double d2) {
-        long first = Double.doubleToRawLongBits(d1);
-        long second = Double.doubleToRawLongBits(d2);
-        long mask = 1L;
-        long result = 0;
-        for (int i = 0; i < 64; i++, mask <<= 1) {
-            if (random.nextBoolean()) {
-                result |= mask & first;
-            } else {
-                result |= mask & second;
-            }
-        }
-        System.out.format("got %.10f and %.10f put out %.10f\n", d1, d2, Double.longBitsToDouble(result));
-        return Double.longBitsToDouble(result);
-    }
+
 
     public static void main(String[] args) {
-        (new Thread(new GAGenerateSpecies("one", 6, GASpecies.Comparators.BIOMASS))).start();
+        (new Thread(new GAGenerateSpecies("one", "two",6, GASpecies.Comparators.LONGETIVITYANDBIOMASS))).start();
         //(new Thread(new GAGenerateSpecies("two", 4))).start();
 
     }
@@ -161,7 +187,36 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
 
     @Override
     public synchronized void keepData(String identifier, int iteration, double biomass) {
-        System.out.format("identifier:%s reported longevity=%.1f biomass=%.2f", identifier, iteration, biomass);
+        //System.out.format("identifier:%s reported longevity=%.1f biomass=%.2f", identifier, iteration, biomass);
+        try {
+            File GAdata = new File("data/GAdata.csv");
+            FileWriter fileWriter;
+            StringBuilder sb = new StringBuilder();
+
+            if (!GAdata.isFile()){
+                fileWriter = new FileWriter(GAdata);
+                sb.append("identifier");
+                sb.append(',');
+                sb.append("iteration");
+                sb.append(',');
+                sb.append("biomass");
+                sb.append('\n');
+            } else {
+                fileWriter = new FileWriter(GAdata, true);
+            }
+
+            sb.append(identifier);
+            sb.append(',');
+            sb.append(iteration);
+            sb.append(',');
+            sb.append(biomass);
+            sb.append('\n');
+
+            fileWriter.write(sb.toString());
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private class GAWorker extends Thread {
@@ -181,7 +236,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
          * Copy the best 1/2 GASpecies growth rates over the worst 1/2 Growth rates.
          * We are maximizing on two variables: longetivity and biomass.
          * Longetivity is easy to max out (to 5,000 iterations), so we primarily select
-         * for high longetivity and secondarily select for high biomass. What this looks like in pr
+         * for high longetivity and secondarily select for high biomass.
          *
          * @param population
          */
@@ -218,7 +273,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
      * Copy the best 1/2 GASpecies growth rates over the worst 1/2 Growth rates.
      * We are maximizing on two variables: longetivity and biomass.
      * Longetivity is easy to max out (to 5,000 iterations), so we primarily select
-     * for high longetivity and secondarily select for high biomass. What this looks like in pr
+     * for high longetivity and secondarily select for high biomass.
      *
      * @param population
      */
