@@ -3,6 +3,9 @@ package gui;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.GraphicsContext;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -11,7 +14,7 @@ import java.util.Random;
 /**
  * Created by Sahba on 3/23/2017.
  */
-class Main extends AnimationTimer {
+class Main extends AnimationTimer implements GUIDataKeeper{
     private final Tree[][] JUNGLE;
     private final int SIZE;
     private final double p1;
@@ -199,5 +202,39 @@ class Main extends AnimationTimer {
         }
         itr++;
         simulate();
+        keepData(itr, liveCounter, onFire.size());
+    }
+
+    @Override
+    public void keepData(int iteration, int liveTrees, int treesOnFire) {
+        try {
+            File GAdata = new File("data/GUIdata.csv");
+            FileWriter fileWriter;
+            StringBuilder sb = new StringBuilder();
+
+            if (!GAdata.isFile()){
+                fileWriter = new FileWriter(GAdata);
+                sb.append("iteration");
+                sb.append(',');
+                sb.append("live_trees");
+                sb.append(',');
+                sb.append("on_fire");
+                sb.append('\n');
+            } else {
+                fileWriter = new FileWriter(GAdata, true);
+            }
+
+            sb.append(iteration);
+            sb.append(',');
+            sb.append(liveTrees);
+            sb.append(',');
+            sb.append(treesOnFire);
+            sb.append('\n');
+
+            fileWriter.write(sb.toString());
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
