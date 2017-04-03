@@ -3,12 +3,15 @@ package GA;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+
 
 /**
  * The genetic algorithm class, one species runs on one Thread
@@ -29,6 +32,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
     //set the comparator for selection from the GA SPECIES class
     private final Comparator<GASpecies> FITNESS_CRITERION;
     private final boolean TWO_SPECIES;
+    private final static String datetime = new SimpleDateFormat("MMMdd_HH.mm.ss").format(new Date());
 
     /**
      * The Constructor for one species
@@ -180,7 +184,6 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
 
     public static void main(String[] args) {
         (new Thread(new GAGenerateSpecies("one", "two",6, GASpecies.Comparators.LONGETIVITYANDBIOMASS))).start();
-        //(new Thread(new GAGenerateSpecies("two", 4))).start();
 
     }
 
@@ -188,8 +191,9 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
     @Override
     public synchronized void keepData(String identifier, int iteration, double biomass) {
         //System.out.format("identifier:%s reported longevity=%.1f biomass=%.2f", identifier, iteration, biomass);
+        new File("data/").mkdirs();
         try {
-            File GAdata = new File("data/GAdata.csv");
+            File GAdata = new File("data/GAdata_"+datetime+".csv");
             FileWriter fileWriter;
             StringBuilder sb = new StringBuilder();
 

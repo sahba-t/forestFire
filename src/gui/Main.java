@@ -6,10 +6,8 @@ import javafx.scene.canvas.GraphicsContext;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Random;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Created by Sahba on 3/23/2017.
@@ -32,6 +30,7 @@ class Main extends AnimationTimer implements GUIDataKeeper{
     private int itr;
     private final GraphicsContext gcx;
     private int fireFighterCount;
+    private final static String datetime = new SimpleDateFormat("MMMdd_HH.mm.ss").format(new Date());
 
     /**
      * Constructor for the animation (simulation class). If this class is used it is assumed that
@@ -207,8 +206,9 @@ class Main extends AnimationTimer implements GUIDataKeeper{
 
     @Override
     public void keepData(int iteration, int liveTrees, int treesOnFire) {
+        new File("data/").mkdirs();
         try {
-            File GAdata = new File("data/GUIdata.csv");
+            File GAdata = new File("data/GUIdata_"+datetime+".csv");
             FileWriter fileWriter;
             StringBuilder sb = new StringBuilder();
 
