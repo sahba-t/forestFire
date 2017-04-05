@@ -1,9 +1,12 @@
 package GA;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Timestamp;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,50 +24,56 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
 
     private final static double MUT_PROB = 0.1;
     private final String species1Name;
-    private final String species2Name;
+    private String species2Name;
     private final int POP_COUNT;
-    private Random random;
+    private final Random random;
     //the size of the simulation
     private final static int BOARD_SIZE = 100;
     //how many worker threads should run simultaneously
     private final static int THREAD_POOL_SIZE = 5;
-    private final static int MAX_ITERATION = 10;
+    private final static int MAX_ITERATION = 15;
     //set the comparator for selection from the GA SPECIES class
     private final Comparator<GASpecies> FITNESS_CRITERION;
-    private final boolean TWO_SPECIES;
+    private boolean TWO_SPECIES;
     private final static String datetime = new SimpleDateFormat("MMMdd_HH.mm.ss").format(new Date());
+    private BufferedWriter dataWriter;
+    private static boolean recordData = true;
 
     /**
      * The Constructor for one species
+     *
      * @param speciesName       the name for the species we are optimizing
      * @param populationCount   the number of initial population
      * @param fitnessComparator the comparator for comparing individuals
      */
     GAGenerateSpecies(String speciesName, int populationCount, Comparator<GASpecies> fitnessComparator) {
-        this.species1Name = speciesName;
         TWO_SPECIES = false;
-        this.species2Name = null;
+        this.species1Name = speciesName;
         POP_COUNT = populationCount;
         this.random = new Random();
+        this.species2Name = null;
         this.FITNESS_CRITERION = fitnessComparator;
+        try {
+            dataWriter = initialDataFiles();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
         //generateSpecies(random);
 
     }
 
     /**
      * The Constructor for two species
-     * @param species1Name the name for the first species we are optimizing
-     * @param species2Name the name for the second species we are optimizing
-     * @param populationCount the number of initial population
+     *
+     * @param species1Name      the name for the first species we are optimizing
+     * @param species2Name      the name for the second species we are optimizing
+     * @param populationCount   the number of initial population
      * @param fitnessComparator the comparator for comparing individuals
      */
     GAGenerateSpecies(String species1Name, String species2Name, int populationCount, Comparator<GASpecies> fitnessComparator) {
-        this.species1Name = species1Name;
+        this(species1Name, populationCount, fitnessComparator);
         this.species2Name = species2Name;
         TWO_SPECIES = true;
-        POP_COUNT = populationCount;
-        this.random = new Random();
-        this.FITNESS_CRITERION = fitnessComparator;
     }
 
     @Override
@@ -93,31 +102,34 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
             if (TWO_SPECIES) {
                 getFitness(speciesPopulation, speciesPopulation2, fitnessExecutor, iteration, fitnessThreads);
                 gaExecutor = Executors.newFixedThreadPool(2);
-                for (GASpecies individual : speciesPopulation){
-                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
-                }
-                for (GASpecies individual : speciesPopulation2){
-                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
-                }
+//                for (GASpecies individual : speciesPopulation) {
+//                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
+//                }
+//                for (GASpecies individual : speciesPopulation2) {
+//                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
+//                }
 
             } else {
                 getFitness(speciesPopulation, fitnessExecutor, iteration, fitnessThreads);
-                for (GASpecies individual : speciesPopulation){
-                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
-                }
+//                for (GASpecies individual : speciesPopulation) {
+//                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
+//                }
             }
-
 
 
             // I think we should not evolve our last generation
             if (iteration < MAX_ITERATION) {
                 if (!TWO_SPECIES) {
-                    selection(speciesPopulation);
-                    mutate(speciesPopulation);
+                    try {
+                        selection(speciesPopulation);
+                        mutate(speciesPopulation);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
 
-                    worker1.setPopulation(speciesPopulation);
-                    worker2.setPopulation(speciesPopulation2);
+                    worker1.setPopulation(speciesPopulation, 1);
+                    worker2.setPopulation(speciesPopulation2, 2);
                     gaExecutor.execute(worker1);
                     gaExecutor.execute(worker2);
                     gaExecutor.shutdown();
@@ -134,6 +146,13 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         System.out.format("Species %s evolved growth rate: %.10f\n", species1Name, speciesPopulation.get(POP_COUNT - 1).getP());
         if (TWO_SPECIES) {
             System.out.format("Species %s evolved growth rate: %.10f\n", species2Name, speciesPopulation2.get(POP_COUNT - 1).getP());
+        }
+        if (dataWriter != null) {
+            try {
+                dataWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -181,23 +200,56 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
     }
 
 
-
     public static void main(String[] args) {
-        (new Thread(new GAGenerateSpecies("one", "two",6, GASpecies.Comparators.LONGETIVITYANDBIOMASS))).start();
+        (new Thread(new GAGenerateSpecies("one", "two", 20, GASpecies.Comparators.LONGETIVITYANDBIOMASS))).start();
 
     }
 
+    private BufferedWriter initialDataFiles() throws IOException {
+        Path dir = Paths.get("./data");
+        if (!Files.exists(dir)) {
+            Files.createDirectories(dir);
+        }
+        Path file = dir.resolve("GAdata_" + datetime + ".csv");
+        return Files.newBufferedWriter(file);
+
+    }
+
+    /**
+     * @param average    whether record the fitness average or just the fittest
+     * @param population the sorted population
+     * @return true of operation successful
+     */
+    private synchronized boolean recordFitness(boolean average, ArrayList<GASpecies> population) throws IOException {
+
+        if (average) {
+            double longevity = 0;
+            double bioMass = 0;
+            for (GASpecies individual : population) {
+                longevity += individual.getLongevity();
+                bioMass += individual.getBiomass();
+            }
+            bioMass = bioMass / (double) POP_COUNT;
+            longevity = longevity / (double) POP_COUNT;
+            dataWriter.write(bioMass + "," + longevity + "\n");
+
+        } else {
+            GASpecies individual = population.get(population.size() - 1);
+            dataWriter.write(+individual.getBiomass() + "," + individual.getLongevity() + "\n");
+        }
+        return true;
+    }
 
     @Override
     public synchronized void keepData(String identifier, int iteration, double biomass) {
         //System.out.format("identifier:%s reported longevity=%.1f biomass=%.2f", identifier, iteration, biomass);
         new File("data/").mkdirs();
         try {
-            File GAdata = new File("data/GAdata_"+datetime+".csv");
+            File GAdata = new File("data/GAdata_" + datetime + ".csv");
             FileWriter fileWriter;
             StringBuilder sb = new StringBuilder();
 
-            if (!GAdata.isFile()){
+            if (!GAdata.isFile()) {
                 fileWriter = new FileWriter(GAdata);
                 sb.append("identifier");
                 sb.append(',');
@@ -223,30 +275,32 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         }
     }
 
-    private class GAWorker extends Thread {
+    class GAWorker extends Thread {
         private ArrayList<GASpecies> population;
+        private int populationIdentifier;
 
-        private void setPopulation(ArrayList<GASpecies> population) {
+        private void setPopulation(ArrayList<GASpecies> population, int populationIdentifier) {
             this.population = population;
+            this.populationIdentifier = populationIdentifier;
         }
 
         @Override
         public void run() {
-            selection(population);
+            try {
+                selection(population);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             mutate(population);
         }
 
-        /**
-         * Copy the best 1/2 GASpecies growth rates over the worst 1/2 Growth rates.
-         * We are maximizing on two variables: longetivity and biomass.
-         * Longetivity is easy to max out (to 5,000 iterations), so we primarily select
-         * for high longetivity and secondarily select for high biomass.
-         *
-         * @param population
-         */
-        private void selection(ArrayList<GASpecies> population) {
+        private void selection(ArrayList<GASpecies> population) throws IOException {
             int halfway = POP_COUNT / 2;
             population.sort(FITNESS_CRITERION);
+            if (recordData) {
+                if (populationIdentifier == 1)
+                    recordFitness(true, population);
+            }
             int keeperIndex;
             for (int index = 0; index < halfway; index++) {
                 keeperIndex = POP_COUNT - index - 1;
@@ -281,9 +335,12 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
      *
      * @param population
      */
-    private void selection(ArrayList<GASpecies> population) {
+    private void selection(ArrayList<GASpecies> population) throws IOException {
         int halfway = POP_COUNT / 2;
         population.sort(FITNESS_CRITERION);
+        if (recordData) {
+            recordFitness(true, population);
+        }
         int keeperIndex;
         for (int index = 0; index < halfway; index++) {
             keeperIndex = POP_COUNT - index - 1;

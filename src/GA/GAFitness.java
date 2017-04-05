@@ -27,7 +27,6 @@ public class GAFitness implements Runnable {
     private static final boolean debug = false;
     // private final JungleDataKeeper dataKeeper;
     private int iteration;
-    private String identifire;
 
     /**
      * @param size       The size of the simulation
