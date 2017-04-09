@@ -10,8 +10,11 @@ import javafx.stage.Stage;
 
 public class GUI extends Application implements Terminable {
     private static final int SIZE = 250;
-    private static final double P1 = 0.023332248569399867;
-    private static final double P2 = 0.029612721932376275;
+    private static final double P1 = 0.02;
+    private static final double P2 = 0.021;
+    private static int FIRE_FIGHTERS = 550;
+    // private static final double P1 = 0.023332248569399867;
+    // private static final double P2 = 0.029612721932376275;
 
     //    private double elementWidth;
 //    private double elementHeight;
@@ -29,19 +32,9 @@ public class GUI extends Application implements Terminable {
         gcx.setStroke(Color.BLACK);
         ScrollPane pane = new ScrollPane(canvas);
         primaryStage.setScene(new Scene(pane));
-        //  Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
-//        primaryStage.setX(bounds.getMinX());
-//        primaryStage.setY(bounds.getMinY());
-//        primaryStage.setWidth(bounds.getWidth());
-//        primaryStage.setHeight(bounds.getHeight());
-//        pane.vvalueProperty().addListener((observable, oldValue, newValue) ->
-//        {
-//            System.out.println("should shou rows: " + pane.getHeight() / elementHeight);
-//            System.out.println("starting from row: " + newValue.doubleValue() * SIZE / pane.getVmax());
-//        });
 
         primaryStage.show();
-        new Main(SIZE, P1, P2, this, gcx, 625).start();
+        new Main(SIZE, P1, P2, this, gcx, FIRE_FIGHTERS).start();
     }
 
 

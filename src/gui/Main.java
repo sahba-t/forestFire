@@ -12,7 +12,7 @@ import java.util.*;
 /**
  * Created by Sahba on 3/23/2017.
  */
-class Main extends AnimationTimer implements GUIDataKeeper{
+class Main extends AnimationTimer implements GUIDataKeeper {
     private final Tree[][] JUNGLE;
     private final int SIZE;
     private final double p1;
@@ -71,9 +71,10 @@ class Main extends AnimationTimer implements GUIDataKeeper{
      */
     Main(int size, double p1, double p2, Terminable terminable, GraphicsContext gcx, int fireFighterCount) {
         this(size, p1, terminable, gcx, fireFighterCount);
-        this.p2 = p2 + p1;
-        this.twoSpecies = true;
-
+        if (p2 > 0) {
+            this.p2 = p2 + p1;
+            this.twoSpecies = true;
+        }
     }
 
     private void buildJungle() {
@@ -94,13 +95,13 @@ class Main extends AnimationTimer implements GUIDataKeeper{
                 tree = JUNGLE[i][j];
                 if (random.nextDouble() < LIGHT_PROB) {
                     // XXX it should be either species one or species 2 check
-                    if (tree.getState() == State.SPECIES1 || tree.getState() == State.SPECIES2) {
+                    if (tree.getState() == State.SPECIES1 || tree.getState() == State.SPECIES2 || tree.getState() == State.EXTINGUISHED) {
                         tree.setState(State.FIRE);
                         onFire.add(tree);
                         liveCounter--;
                     }
                 }
-                if (tree.getState() == State.EMPTY || tree.getState() == State.EXTINGUISHED)
+                if (tree.getState() == State.EMPTY) {
                     if (random.nextDouble() < p1) {
                         tree.setState(State.SPECIES1);
                         liveCounter++;
@@ -111,6 +112,7 @@ class Main extends AnimationTimer implements GUIDataKeeper{
                         }
                     }
 
+                }
             }
         }
     }
@@ -124,7 +126,7 @@ class Main extends AnimationTimer implements GUIDataKeeper{
                 burnNeighbours(tree);
                 JUNGLE[tree.getRow()][tree.getColumn()].setState(State.EMPTY);
             }
-            System.out.println("Live Counter: " + liveCounter);
+
             if (liveCounter < 0) {
                 terminable.terminate("Negative");
             }
@@ -137,6 +139,7 @@ class Main extends AnimationTimer implements GUIDataKeeper{
                     for (Tree anOnFire : onFire) {
 
                         anOnFire.setState(State.EXTINGUISHED);
+                        liveCounter++;
                     }
                     System.out.format("all %d fires extinguished!\n", onFire.size());
                     onFire.clear();
@@ -148,12 +151,13 @@ class Main extends AnimationTimer implements GUIDataKeeper{
                     for (Iterator<Tree> treeItr = onFire.iterator(); i < fireFighterCount; i++) {
                         tree = treeItr.next();
                         tree.setState(State.EXTINGUISHED);
-
+                        liveCounter++;
                         treeItr.remove();
                     }
                     System.out.format("%d fires extinguished out of %d!\n", i, fires);
                 }
             }
+            System.out.println("Live Counter: " + liveCounter);
         }
     }
 
@@ -166,7 +170,7 @@ class Main extends AnimationTimer implements GUIDataKeeper{
         for (int i = 0; i < 8 && neighbours[i] != null; i++) {
 
             neighbour = neighbours[i];
-            if (neighbour.getState() == State.SPECIES1 || neighbour.getState() == State.SPECIES2) {
+            if (neighbour.getState() == State.SPECIES1 || neighbour.getState() == State.SPECIES2 || neighbour.getState() == State.EXTINGUISHED) {
                 liveCounter--;
                 neighbour.setState(State.FIRE);
                 onFire.add(neighbour);
@@ -208,11 +212,11 @@ class Main extends AnimationTimer implements GUIDataKeeper{
     public void keepData(int iteration, int liveTrees, int treesOnFire) {
         new File("data/").mkdirs();
         try {
-            File GAdata = new File("data/GUIdata_"+datetime+".csv");
+            File GAdata = new File("data/GUIdata_" + datetime + ".csv");
             FileWriter fileWriter;
             StringBuilder sb = new StringBuilder();
 
-            if (!GAdata.isFile()){
+            if (!GAdata.isFile()) {
                 fileWriter = new FileWriter(GAdata);
                 sb.append("iteration");
                 sb.append(',');
@@ -238,3 +242,4 @@ class Main extends AnimationTimer implements GUIDataKeeper{
         }
     }
 }
+

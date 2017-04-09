@@ -25,7 +25,9 @@ public class GASpecies {
         this.identifier = identifier;
     }
 
-    String getIdentifier() { return identifier;}
+    String getIdentifier() {
+        return identifier;
+    }
 
     void setP(double p) {
         P = p;
@@ -57,7 +59,16 @@ public class GASpecies {
         static final Comparator<GASpecies> BIOMASS =
                 (GASpecies o1, GASpecies o2) -> Double.compare(o1.getBiomass(), o2.getBiomass());
         static final Comparator<GASpecies> LONGETIVITYANDBIOMASS =
-                (GASpecies o1, GASpecies o2) -> LONGETIVITY.thenComparing(BIOMASS).compare(o1, o2);
+                (GASpecies o1, GASpecies o2) -> {
+                    double result = o1.getBiomass() + o1.getLongevity() - o2.getBiomass() + o2.getLongevity();
+                    if (result > 0) {
+                        return 1;
+                    }
+                    if (result < 0) {
+                        return -1;
+                    }
+                    return 0;
+                };
     }
 
     @Override
