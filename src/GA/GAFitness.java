@@ -100,7 +100,7 @@ public class GAFitness implements Runnable {
         GATree tree;
         liveCounter = 0;
         iteration = 1;
-        //it will now overflow value << 5000 * 625 << max double
+        //it will now overflow value << 5000 * 62500 << max double
         double longevity = 0;
         while (iteration < MAX_ITR) {
             if (debug) {

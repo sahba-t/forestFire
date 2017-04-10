@@ -11,6 +11,7 @@ import java.util.*;
 
 /**
  * Created by Sahba on 3/23/2017.
+ * This class performs a forest fire simulation
  */
 class Main extends AnimationTimer implements GUIDataKeeper {
     private final Tree[][] JUNGLE;
@@ -58,7 +59,6 @@ class Main extends AnimationTimer implements GUIDataKeeper {
             this.fireFighterCount = fireFighterCount;
         } else {
             useFireFighters = false;
-            fireFighterCount = 0;
         }
     }
 
