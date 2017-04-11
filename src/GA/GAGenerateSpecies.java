@@ -201,7 +201,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
 
 
     public static void main(String[] args) {
-        (new Thread(new GAGenerateSpecies("one", "two", 20, GASpecies.Comparators.LONGETIVITYANDBIOMASS))).start();
+        (new Thread(new GAGenerateSpecies("one", 20, GASpecies.Comparators.BIOMASS))).start();
 
     }
 

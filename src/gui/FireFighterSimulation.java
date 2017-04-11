@@ -305,7 +305,7 @@ public class FireFighterSimulation implements Runnable {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
-            double p1 = 0.7;
+            double p1 = 0.99;
             double p2 = 0;
             int threadPoolSize = 5;
             Path file = dir.resolve("firefighter" + p1 + p2 + ".csv");
@@ -355,8 +355,8 @@ public class FireFighterSimulation implements Runnable {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
-            double p1 = 0.05;
-            double increment = 0.05;
+            double p1 = 0.01;
+            double increment = 0.01;
             int threadPoolSize = 10;
             Path file = dir.resolve("landscape" + p1 + "_" + increment + ".csv");
             writer = Files.newBufferedWriter(file);
@@ -364,7 +364,7 @@ public class FireFighterSimulation implements Runnable {
             for (int i = 1; i < threadPoolSize + 1; i++) {
                 simulators[i - 1] = new FireFighterSimulation(250, increment * i, 0, 0);
             }
-            for (int i = 0; i < 2; i++) {
+            for (int i = 1; i < 11; i++) {
                 ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
                 for (int j = 0; j < threadPoolSize; j++) {
                     executor.execute(simulators[j]);
@@ -379,7 +379,7 @@ public class FireFighterSimulation implements Runnable {
                     writer.write(individual.p1 + ", 0, " + individual.fireFighterCount + "," +
                             individual.biomass + "," + individual.iteration + "\n");
 
-                    simulators[j - 1].resetSimulation(increment * (threadPoolSize + j), 0, 0);
+                    simulators[j - 1].resetSimulation(increment * (10 * i + j), 0, 0);
                 }
             }
 

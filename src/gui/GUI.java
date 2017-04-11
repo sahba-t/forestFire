@@ -10,9 +10,9 @@ import javafx.stage.Stage;
 
 public class GUI extends Application implements Terminable {
     private static final int SIZE = 250;
-    private static final double P1 = 0.02;
-    private static final double P2 = 0.021;
-    private static int FIRE_FIGHTERS = 550;
+    private static final double P1 = 0.03;
+    private static final double P2 = 0;
+    private static int FIRE_FIGHTERS = 0;
     // private static final double P1 = 0.023332248569399867;
     // private static final double P2 = 0.029612721932376275;
 
