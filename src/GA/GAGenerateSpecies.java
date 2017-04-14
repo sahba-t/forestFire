@@ -28,10 +28,10 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
     private final int POP_COUNT;
     private final Random random;
     //the size of the simulation
-    private final static int BOARD_SIZE = 100;
+    private final static int BOARD_SIZE = 250;
     //how many worker threads should run simultaneously
     private final static int THREAD_POOL_SIZE = 5;
-    private final static int MAX_ITERATION = 15;
+    private static int MAX_ITERATION = 15;
     //set the comparator for selection from the GA SPECIES class
     private final Comparator<GASpecies> FITNESS_CRITERION;
     private boolean TWO_SPECIES;
@@ -201,8 +201,29 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
 
 
     public static void main(String[] args) {
-        (new Thread(new GAGenerateSpecies("one", 20, GASpecies.Comparators.BIOMASS))).start();
-
+        int popCount = 20;
+        boolean twoSpecies = false;
+        try {
+            if (args.length > 0) {
+                if (args[0].compareTo("2") == 0)
+                    twoSpecies = true;
+                if (args.length > 1) {
+                    popCount = Integer.parseInt(args[1]);
+                }
+                if (args.length > 2) {
+                    MAX_ITERATION = Integer.parseInt(args[2]);
+                }
+            }
+        } catch (NumberFormatException ex) {
+            System.out.println("BAD ARGUMENTS: 1 or 2 (string), population count (int), maximum generation (int)");
+        }
+        if (twoSpecies) {
+            System.out.format("starting two species GA with population %d and maxItr %d\n", popCount, MAX_ITERATION);
+            (new Thread(new GAGenerateSpecies("one", "two", popCount, GASpecies.Comparators.BIOMASS))).start();
+        } else {
+            System.out.format("starting One species GA with population %d and maxItr %d\n", popCount, MAX_ITERATION);
+            (new Thread(new GAGenerateSpecies("one", popCount, GASpecies.Comparators.BIOMASS))).start();
+        }
     }
 
     private BufferedWriter initialDataFiles() throws IOException {

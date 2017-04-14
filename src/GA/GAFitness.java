@@ -17,7 +17,7 @@ public class GAFitness implements Runnable {
 
     private final static double lightP = 0.001;
     private final GATree[][] jungle;
-    private final static int MAX_ITR = 5000;
+    private final static int MAX_ITR = 2000;
     private final Random random;
     private int liveCounter;
     private final ArrayList<GATree> onFire;
@@ -102,12 +102,16 @@ public class GAFitness implements Runnable {
         iteration = 1;
         //it will now overflow value << 5000 * 62500 << max double
         double longevity = 0;
+        double temp = 0;
         while (iteration < MAX_ITR) {
             if (debug) {
                 System.out.println("itr: " + iteration);
             }
             //sets the previously ignited cells to empty and mark their neighbours as on fire
             setOnFire();
+//            if(iteration>1){
+//                temp=liveCounter;
+//            }
             //if all trees have burnt stop!
             if (terminate) {
                 break;
@@ -135,8 +139,11 @@ public class GAFitness implements Runnable {
                 }
             }
             // if (iteration > 1) {
-            longevity += liveCounter;
+            //longevity += liveCounter;
             // }
+//            temp+=liveCounter;
+//            temp/=2;
+            longevity += liveCounter;
             iteration++;
         }
         if (!terminate) {

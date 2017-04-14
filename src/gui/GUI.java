@@ -9,9 +9,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GUI extends Application implements Terminable {
-    private static final int SIZE = 250;
-    private static final double P1 = 0.03;
-    private static final double P2 = 0;
+    private static int SIZE = 250;
+    private static double P1 = 0.2;
+    private static double P2 = 0.0;
     private static int FIRE_FIGHTERS = 0;
     // private static final double P1 = 0.023332248569399867;
     // private static final double P2 = 0.029612721932376275;
@@ -39,8 +39,22 @@ public class GUI extends Application implements Terminable {
 
 
     public static void main(String[] args) {
-
+        try {
+            if (args.length > 0) {
+                P1 = Double.parseDouble(args[0]);
+                if (args.length > 1) {
+                    P2 = Double.parseDouble(args[1]);
+                    if (args.length > 2) {
+                        FIRE_FIGHTERS = Integer.parseInt(args[2]);
+                    }
+                }
+            }
+        } catch (NumberFormatException ex) {
+            System.out.println("BAD ARGUMENT!\n please insert p1(float) p2(float) fireFighterCount(int) ");
+        }
         launch(args);
+
+
     }
 
     @Override

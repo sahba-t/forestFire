@@ -32,6 +32,7 @@ class Main extends AnimationTimer implements GUIDataKeeper {
     private final GraphicsContext gcx;
     private int fireFighterCount;
     private final static String datetime = new SimpleDateFormat("MMMdd_HH.mm.ss").format(new Date());
+    private static final boolean Record_Data = false;
 
     /**
      * Constructor for the animation (simulation class). If this class is used it is assumed that
@@ -205,7 +206,9 @@ class Main extends AnimationTimer implements GUIDataKeeper {
         }
         itr++;
         simulate();
-        keepData(itr, liveCounter, onFire.size());
+        if (Record_Data) {
+            keepData(itr, liveCounter, onFire.size());
+        }
     }
 
     @Override
@@ -218,12 +221,6 @@ class Main extends AnimationTimer implements GUIDataKeeper {
 
             if (!GAdata.isFile()) {
                 fileWriter = new FileWriter(GAdata);
-                sb.append("iteration");
-                sb.append(',');
-                sb.append("live_trees");
-                sb.append(',');
-                sb.append("on_fire");
-                sb.append('\n');
             } else {
                 fileWriter = new FileWriter(GAdata, true);
             }

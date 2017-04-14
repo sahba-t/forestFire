@@ -33,7 +33,7 @@ public class FireFighterSimulation implements Runnable {
     private int iteration;
     private boolean terminate;
     private int fireFighterCount;
-    private static final int MAX_ITR = 2000;
+    private static final int MAX_ITR = 1000;
 
     /**
      * Constructor for the animation (simulation class). If this class is used it is assumed that
@@ -124,8 +124,11 @@ public class FireFighterSimulation implements Runnable {
         Tree tree;
         onFire.clear();
         onFireCopy.clear();
+        //     double temp;
         while (iteration < MAX_ITR) {
             setOnFire();
+            biomass += liveCounter;
+            //       temp = liveCounter;
             if (terminate) {
                 break;
             }
@@ -156,7 +159,10 @@ public class FireFighterSimulation implements Runnable {
                 }
             }
             iteration++;
-            biomass += liveCounter;
+            //     temp += liveCounter;
+            //    temp /= 2.0;
+            //   biomass += temp;
+            //biomass += liveCounter;
         }
         if (!terminate) {
             setOnFire();
@@ -358,7 +364,7 @@ public class FireFighterSimulation implements Runnable {
             double p1 = 0.01;
             double increment = 0.01;
             int threadPoolSize = 10;
-            Path file = dir.resolve("landscape" + p1 + "_" + increment + ".csv");
+            Path file = dir.resolve("landscapelow" + p1 + "_" + increment + ".csv");
             writer = Files.newBufferedWriter(file);
             FireFighterSimulation[] simulators = new FireFighterSimulation[threadPoolSize];
             for (int i = 1; i < threadPoolSize + 1; i++) {
