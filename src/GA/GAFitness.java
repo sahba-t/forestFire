@@ -25,7 +25,6 @@ public class GAFitness implements Runnable {
     private boolean terminate = false;
     private int[][] neighbours = new int[][]{{-1, 1}, {-1, -1}, {-1, 0}, {1, 1}, {1, -1}, {1, 0}, {0, 1}, {0, -1}};
     private static final boolean debug = false;
-    // private final JungleDataKeeper dataKeeper;
     private int iteration;
 
     /**
@@ -102,17 +101,13 @@ public class GAFitness implements Runnable {
         iteration = 1;
         //it will now overflow value << 5000 * 62500 << max double
         double longevity = 0;
-        double temp = 0;
         while (iteration < MAX_ITR) {
             if (debug) {
                 System.out.println("itr: " + iteration);
             }
             //sets the previously ignited cells to empty and mark their neighbours as on fire
             setOnFire();
-//            if(iteration>1){
-//                temp=liveCounter;
-//            }
-            //if all trees have burnt stop!
+
             if (terminate) {
                 break;
             }
@@ -138,11 +133,8 @@ public class GAFitness implements Runnable {
                     }
                 }
             }
-            // if (iteration > 1) {
-            //longevity += liveCounter;
-            // }
-//            temp+=liveCounter;
-//            temp/=2;
+            //captures the biomass of this run. longevity should practically be called biomass
+            //but because of name conflicts I left it like this
             longevity += liveCounter;
             iteration++;
         }

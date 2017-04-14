@@ -1,8 +1,6 @@
 package GA;
 
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +18,7 @@ import java.util.concurrent.Executors;
  * The genetic algorithm class, one species runs on one Thread
  * Created by jdudek on 3/28/2017.
  */
-public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
+public class GAGenerateSpecies implements Runnable {
 
     private final static double MUT_PROB = 0.1;
     private final String species1Name;
@@ -46,7 +44,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
      * @param populationCount   the number of initial population
      * @param fitnessComparator the comparator for comparing individuals
      */
-    GAGenerateSpecies(String speciesName, int populationCount, Comparator<GASpecies> fitnessComparator) {
+    private GAGenerateSpecies(String speciesName, int populationCount, Comparator<GASpecies> fitnessComparator) {
         TWO_SPECIES = false;
         this.species1Name = speciesName;
         POP_COUNT = populationCount;
@@ -70,12 +68,16 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
      * @param populationCount   the number of initial population
      * @param fitnessComparator the comparator for comparing individuals
      */
-    GAGenerateSpecies(String species1Name, String species2Name, int populationCount, Comparator<GASpecies> fitnessComparator) {
+    private GAGenerateSpecies(String species1Name, String species2Name, int populationCount, Comparator<GASpecies> fitnessComparator) {
         this(species1Name, populationCount, fitnessComparator);
         this.species2Name = species2Name;
         TWO_SPECIES = true;
     }
 
+    /**
+     * The main part of this class that initialized the species, parses parameters and
+     * performs fitness evaluation and selection using multi threading
+     */
     @Override
     public void run() {
         GAFitness[] fitnessThreads = new GAFitness[POP_COUNT];
@@ -102,18 +104,9 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
             if (TWO_SPECIES) {
                 getFitness(speciesPopulation, speciesPopulation2, fitnessExecutor, iteration, fitnessThreads);
                 gaExecutor = Executors.newFixedThreadPool(2);
-//                for (GASpecies individual : speciesPopulation) {
-//                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
-//                }
-//                for (GASpecies individual : speciesPopulation2) {
-//                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
-//                }
 
             } else {
                 getFitness(speciesPopulation, fitnessExecutor, iteration, fitnessThreads);
-//                for (GASpecies individual : speciesPopulation) {
-//                    keepData(individual.getIdentifier(), iteration, individual.getBiomass());
-//                }
             }
 
 
@@ -156,6 +149,11 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         }
     }
 
+    /**
+     * Initialized population considering the parameters
+     *
+     * @param population
+     */
     private void initializePopulation(ArrayList<GASpecies> population) {
         for (int i = 0; i < POP_COUNT; i++) {
             population.add(new GASpecies(random.nextDouble()));
@@ -261,41 +259,10 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         return true;
     }
 
-    @Override
-    public synchronized void keepData(String identifier, int iteration, double biomass) {
-        //System.out.format("identifier:%s reported longevity=%.1f biomass=%.2f", identifier, iteration, biomass);
-        new File("data/").mkdirs();
-        try {
-            File GAdata = new File("data/GAdata_" + datetime + ".csv");
-            FileWriter fileWriter;
-            StringBuilder sb = new StringBuilder();
 
-            if (!GAdata.isFile()) {
-                fileWriter = new FileWriter(GAdata);
-                sb.append("identifier");
-                sb.append(',');
-                sb.append("iteration");
-                sb.append(',');
-                sb.append("biomass");
-                sb.append('\n');
-            } else {
-                fileWriter = new FileWriter(GAdata, true);
-            }
-
-            sb.append(identifier);
-            sb.append(',');
-            sb.append(iteration);
-            sb.append(',');
-            sb.append(biomass);
-            sb.append('\n');
-
-            fileWriter.write(sb.toString());
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * This class is used to run selection and mutation in parallel
+     */
     class GAWorker extends Thread {
         private ArrayList<GASpecies> population;
         private int populationIdentifier;
@@ -354,7 +321,7 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
      * Longetivity is easy to max out (to 5,000 iterations), so we primarily select
      * for high longetivity and secondarily select for high biomass.
      *
-     * @param population
+     * @param population the population to perform selection on
      */
     private void selection(ArrayList<GASpecies> population) throws IOException {
         int halfway = POP_COUNT / 2;
@@ -373,6 +340,12 @@ public class GAGenerateSpecies implements Runnable, JungleDataKeeper {
         }
     }
 
+    /**
+     * Performs mutation on the population by XOring the bits with 1
+     * with the constant probability (10%)
+     *
+     * @param population the population for mutation
+     */
     private void mutate(ArrayList<GASpecies> population) {
         for (GASpecies f : population) {
             long number = Double.doubleToLongBits(f.getP());

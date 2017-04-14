@@ -10,9 +10,9 @@ import javafx.stage.Stage;
 
 public class GUI extends Application implements Terminable {
     private static int SIZE = 250;
-    private static double P1 = 0.2;
-    private static double P2 = 0.0;
-    private static int FIRE_FIGHTERS = 0;
+    private static double P1 = 0.01;
+    private static double P2 = 0.01;
+    private static int FIRE_FIGHTERS = 500;
     // private static final double P1 = 0.023332248569399867;
     // private static final double P2 = 0.029612721932376275;
 
@@ -23,6 +23,12 @@ public class GUI extends Application implements Terminable {
 
     }
 
+    /**
+     * starts the GUI. java fx method
+     *
+     * @param primaryStage the javafx stage
+     * @throws Exception if the graphics cannot be initialized
+     */
     @Override
     public void start(Stage primaryStage) throws Exception {
 

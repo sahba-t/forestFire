@@ -61,14 +61,14 @@ public class FireFighterSimulation implements Runnable {
         }
     }
 
-    private double getBiomass() {
-        return biomass;
-    }
-
-    private int getIteration() {
-        return iteration;
-    }
-
+    /**
+     * Enables to user of this class to reuse this class for simulations without the need to
+     * create a new instance. For performance purposes
+     *
+     * @param p1               the new p1 for the new simulation
+     * @param p2               the new p2 for the new simulation
+     * @param fireFighterCount the new number of firefighters
+     */
     private void resetSimulation(double p1, double p2, int fireFighterCount) {
         for (int i = 1; i < SIZE - 1; i++) {
             for (int j = 1; j < SIZE - 1; j++) {
@@ -104,6 +104,9 @@ public class FireFighterSimulation implements Runnable {
         }
     }
 
+    /**
+     * initializes the forest
+     */
     private void buildJungle() {
         for (int i = 1; i < SIZE - 1; i++) {
             for (int j = 1; j < SIZE - 1; j++) {
@@ -114,6 +117,9 @@ public class FireFighterSimulation implements Runnable {
         System.out.println("jungle built");
     }
 
+    /**
+     * runs the simulation by generating trees, burning them and recording their data
+     */
     private void simulate() {
 
         System.out.format("simulating for %f, %f, %d\n", p1, p2, fireFighterCount);
@@ -171,6 +177,9 @@ public class FireFighterSimulation implements Runnable {
         biomass /= iteration;
     }
 
+    /**
+     * sets the trees that are in the fire set to empty and spreads the fire to their neighbors
+     */
     private void setOnFire() {
         if (!onFire.isEmpty()) {
             onFireCopy.clear();
@@ -228,6 +237,11 @@ public class FireFighterSimulation implements Runnable {
 
     }
 
+    /**
+     * Spreads fire to the neighbor of the burning tree
+     *
+     * @param tree the tree whose neighbors have to BURN!
+     */
     private void burnNeighbours(Tree tree) {
         if (liveCounter == 0) {
             terminate("All burnt!");
@@ -245,6 +259,13 @@ public class FireFighterSimulation implements Runnable {
         }
     }
 
+    /**
+     * finds the neighbors of a tree
+     *
+     * @param row    of the tree
+     * @param column column of the tree
+     * @return an array of the neighboring trees
+     */
     private Tree[] getNeighbours(int row, int column) {
         Tree[] neighbourTrees = new Tree[8];
         int nrow;
@@ -304,6 +325,9 @@ public class FireFighterSimulation implements Runnable {
         fitnessLandscapeSimulation();
     }
 
+    /**
+     * simulates the effecgt of firefighters for data output
+     */
     private static void fireFighterSimulation() {
         Path dir = Paths.get("./fireFighterData");
         BufferedWriter writer = null;

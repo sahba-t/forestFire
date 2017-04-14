@@ -32,7 +32,7 @@ class Main extends AnimationTimer implements GUIDataKeeper {
     private final GraphicsContext gcx;
     private int fireFighterCount;
     private final static String datetime = new SimpleDateFormat("MMMdd_HH.mm.ss").format(new Date());
-    private static final boolean Record_Data = false;
+    private static final boolean Record_Data = true;
 
     /**
      * Constructor for the animation (simulation class). If this class is used it is assumed that
@@ -78,6 +78,9 @@ class Main extends AnimationTimer implements GUIDataKeeper {
         }
     }
 
+    /**
+     * initializes the forest
+     */
     private void buildJungle() {
         for (int i = 1; i < SIZE - 1; i++) {
             for (int j = 1; j < SIZE - 1; j++) {
@@ -87,6 +90,9 @@ class Main extends AnimationTimer implements GUIDataKeeper {
         System.out.println("jungle built");
     }
 
+    /**
+     * runs the simulation by generating trees, burning them and recording their data
+     */
     private void simulate() {
 
         setOnFire();
@@ -118,6 +124,9 @@ class Main extends AnimationTimer implements GUIDataKeeper {
         }
     }
 
+    /**
+     * sets the trees that are in the fire set to empty and spreads the fire to their neighbors
+     */
     private void setOnFire() {
         if (!onFire.isEmpty()) {
             onFireCopy.clear();
@@ -162,6 +171,11 @@ class Main extends AnimationTimer implements GUIDataKeeper {
         }
     }
 
+    /**
+     * Spreads fire to the neighbor of the burning tree
+     *
+     * @param tree the tree whose neighbors have to BURN!
+     */
     private void burnNeighbours(Tree tree) {
         if (liveCounter == 0) {
             terminable.terminate("All burnt!");
@@ -179,6 +193,13 @@ class Main extends AnimationTimer implements GUIDataKeeper {
         }
     }
 
+    /**
+     * finds the neighbors of a tree
+     *
+     * @param row    of the tree
+     * @param column column of the tree
+     * @return an array of the neighboring trees
+     */
     private Tree[] getNeighbours(int row, int column) {
         Tree[] neighbourTrees = new Tree[8];
         int nrow;
